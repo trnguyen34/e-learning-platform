@@ -56,7 +56,6 @@ class Content(models.Model):
                                          'text',
                                          'video',
                                          'image',
-                                         'file',
                                          'file')})
     object_id = models.PositiveBigIntegerField()
     item = GenericForeignKey('content_type', 'object_id')

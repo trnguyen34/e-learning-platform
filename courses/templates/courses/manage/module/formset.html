@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Edit "{{ course.title }}"
+{% endblock title %}
+
+{% block content %}
+    <h1>Edit "{{ course.title }}"</h1>
+    <div class="module">
+        <h2>Course modules</h2>
+        <!-- <form action="" method="post">
+            {% csrf_token %}
+            {{ formset.management_form }}
+            <table>
+                <tr>
+                    <th>Title</th><th>Description</th><th>Delete</th>
+                </tr>
+                {% for form in formset %}
+                    <tr>
+                        <td>{{ form.title }}</td>
+                        <td>{{ form.description }}</td>
+                        <td>{{ form.DELETE }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <input type="submit" value="Save module">
+        </form> -->
+        <form action="" method="post">
+            {% csrf_token %}
+            {{ formset.management_form }}
+            {{ formset }}
+            <input type="submit" value="Save module">
+        </form>
+    </div>
+{% endblock content %}
