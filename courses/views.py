@@ -1,3 +1,4 @@
+from braces.views import CsrfExemptMixin, JsonRequestResponseMixin
 from django.apps import apps
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models.query import QuerySet
@@ -122,15 +123,14 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
         form = self.get_form(self.model,
                              instance=self.obj,
                              data=request.POST,
-                             files=request.FILE)
+                             files=request.FILES)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.owner = request.user
             obj.save()
             if not id:
                 # new content 
-                Content.objects.create(module=self.module,
-                                       item=obj)
+                Content.objects.create(module=self.module, item=obj)
                 return redirect('module_content_list', self.module.id)
         return self.render_to_response({'form': form,
                                         'object': self.obj})
@@ -145,3 +145,55 @@ class ContentDeleteView(View):
         content.item.delete()
         content.delete()
         return redirect('module_content_list', module.id)
+    
+    
+class ModuleContentListView(TemplateResponseMixin, View):
+    template_name = 'courses/manage/module/content_list.html'
+    
+    def get(self, request, module_id):
+        module = get_object_or_404(Module,
+                                   id=module_id,
+                                   course__owner=request.user)
+        return self.render_to_response({'module': module})
+    
+    
+class ModuleOrderView(CsrfExemptMixin,
+                      JsonRequestResponseMixin,
+                      View):
+    """
+    Allows to update the order of the course modules.
+
+    Args:
+        CsrfExemptMixin (InheritedMixin): Aviod checking CSRF token
+            in POST request. 
+        JsonRequestResponseMixin (InheritedMixin): Analyze the request
+            data. If the request data is properly formatted, the JSON is saved
+            to self.request_json as Python object. For the response, it will 
+            serializes the response as JSON and returns an HTTP response with 
+            the application/json content type
+        View (Inherite): Parent class for all views.
+    """
+    def post(self, request):
+        for id, order in self.request_json.items():
+            Module.objects.filter(id=id,
+                                  course__owner=request.user).update(order=order)
+        return self.render_json_response({'order': order})
+    
+
+class ContentOrderView(CsrfExemptMixin,
+                       JsonRequestResponseMixin,
+                       View):
+    def post(self, request):
+        for id, order in self.request_json.item():
+            Content.objects.filter(id=id,
+                                   module__course__owner=request.user).update(order=order)
+        return self.render_json_response({'saved': 'OK'})
+    
+    
+    
+    
+    
+    
+    
+    
+    
