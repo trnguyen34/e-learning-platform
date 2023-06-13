@@ -10,15 +10,18 @@ from django.urls import reverse_lazy
 from .models import Content, Course, Module
 from .forms import ModuleFormset
 
+
 class OwnerMixin:
     def get_queryset(self):
         qs = super().get_queryset()
         return qs.filter(owner=self.request.user)
     
+    
 class OwnerEditMixin:
     def form_valid(self, form):
         form.instance.owner = self.request.user
         return super().form_valid(form)
+
     
 class OwnerCourseMixin(OwnerMixin, 
                        LoginRequiredMixin, 
@@ -27,6 +30,7 @@ class OwnerCourseMixin(OwnerMixin,
     fields = ['subject', 'title', 'slug', 'overview']
     success_url = reverse_lazy('manage_course_list')
     
+    
 class OwnerCourseEditMixin(OwnerCourseMixin, OwnerEditMixin):
     template_name = 'courses/manage/course/form.html'
 
@@ -34,15 +38,19 @@ class ManageCourseListView(OwnerCourseMixin, ListView):
     template_name = 'courses/manage/course/list.html'
     permission_required = 'courses.view_course'
     
+    
 class CourseCreateView(OwnerCourseEditMixin, CreateView):
     permission_required = 'courses.add_course'
+
 
 class CourseUpdateView(OwnerCourseEditMixin, UpdateView):
     permission_required = 'courses.change_course'
 
+
 class CourseDeleteView(OwnerCourseMixin, DeleteView):
     template_name = 'courses/manage/course/delete.html'
     permission_required = 'courses.delete_course'
+
     
 class CourseModuleUpdateView(TemplateResponseMixin, View):
     template_name = 'courses/manage/module/formset.html'
@@ -73,6 +81,7 @@ class CourseModuleUpdateView(TemplateResponseMixin, View):
                                         'course': self.course,
                                         'formset': formset})
         
+        
 class ContentCreateUpdateView(TemplateResponseMixin, View):
     module = None
     model = None
@@ -80,7 +89,7 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
     template_name = 'courses/manage/content/form.html'
     
     def get_model(self, model_name):
-        if model_name in ['text', 'video', 'imagfe', 'file']:
+        if model_name in ['text', 'video', 'image', 'file']:
             return apps.get_model(app_label='courses',
                                   model_name=model_name)
             
@@ -93,7 +102,7 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
                                                  'updated'])
         return Form(*args, **kwargs)
     
-    def dispatch(self, request,module_id, model_name, id=None):
+    def dispatch(self, request, module_id, model_name, id=None):
         self.module = get_object_or_404(Module,
                                         id=module_id,
                                         course__owner=request.user)
@@ -126,4 +135,13 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
         return self.render_to_response({'form': form,
                                         'object': self.obj})
             
-            
+
+class ContentDeleteView(View):
+    def post(self, request, id):
+        content = get_object_or_404(Content,
+                                    id=id,
+                                    module__course__owner=request.user)
+        module = content.module
+        content.item.delete()
+        content.delete()
+        return redirect('module_content_list', module.id)
