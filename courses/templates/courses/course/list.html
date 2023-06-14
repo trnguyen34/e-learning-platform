@@ -24,7 +24,7 @@
             </li>
             {% for s in subjects %}
                 <li {% if subject == s %} class="selected"{% endif %}>
-                    <a href="{% url 'course_list_subject' s.slug' %}">
+                    <a href="{% url 'course_list_subject' s.slug %}">
                         {{ s.title }} 
                         <br>
                         <span>
@@ -39,7 +39,7 @@
         {% for course in courses %}
             {% with subject=course.subject %}
                 <h3>
-                    <a href="{% url 'course_deltail' course.slug %}">
+                    <a href="{% url 'course_detail' course.slug %}">
                         {{ course.title }}
                     </a>
                 </h3>

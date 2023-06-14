@@ -219,14 +219,14 @@ class CourseListView(TemplateResponseMixin, View):
         # if the subject is given, filter the courses by the subject
         if subject:
             subject = get_object_or_404(Subject, slug=subject)
-            courses = Course.objects.filter(subject=subject)
+            courses = courses.filter(subject=subject)
         
         return self.render_to_response ({'subjects': subjects,
                                           'subject': subject,
                                           'courses': courses})
     
     
-class CourseDeltailView(DetailView):
+class CourseDetailView(DetailView):
     """
     Displays a single course overview.
 
