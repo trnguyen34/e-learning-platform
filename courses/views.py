@@ -1,14 +1,16 @@
 from braces.views import CsrfExemptMixin, JsonRequestResponseMixin
 from django.apps import apps
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Count
 from django.db.models.query import QuerySet
 from django.forms.models import modelform_factory
 from django.shortcuts import redirect, get_object_or_404
 from django.views.generic.list import ListView
 from django.views.generic.base import TemplateResponseMixin, View
+from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from .models import Content, Course, Module
+from .models import Content, Course, Module, Subject
 from .forms import ModuleFormset
 
 
@@ -171,7 +173,7 @@ class ModuleOrderView(CsrfExemptMixin,
             to self.request_json as Python object. For the response, it will 
             serializes the response as JSON and returns an HTTP response with 
             the application/json content type
-        View (Inherite): Parent class for all views.
+        View (class): Parent class for all views.
     """
     def post(self, request):
         for id, order in self.request_json.items():
@@ -189,8 +191,50 @@ class ContentOrderView(CsrfExemptMixin,
                                    module__course__owner=request.user).update(order=order)
         return self.render_json_response({'saved': 'OK'})
     
+
+class CourseListView(TemplateResponseMixin, View):
+    """
+    Displays courses from all subjects or only courses to a given subject.
+    
+    Args:
+        TemplateResponseMixin (mixin): Used to render a template.
+        View (class): The parent class of all views.
+    """
+    model = Course
+    template_name = 'courses/course/list.html'
+    
+    def get(self, request, subject=None):
+        """
+        Returns:
+            Render the objects to a template and return an HTTP response.
+        """
+        
+        # Retrieve all the subjects and courses by using the ORM's annotat()
+        # method, then use the Count() aggregation function to get the toal
+        # number of courses in each subject and the number of modules in each
+        # course.
+        subjects = Subject.objects.annotate(total_courses=Count('courses'))
+        courses = Course.objects.annotate(total_modules=Count('modules'))
+        
+        # if the subject is given, filter the courses by the subject
+        if subject:
+            subject = get_object_or_404(Subject, slug=subject)
+            courses = Course.objects.filter(subject=subject)
+        
+        return self.render_to_response ({'subjects': subjects,
+                                          'subject': subject,
+                                          'courses': courses})
     
     
+class CourseDeltailView(DetailView):
+    """
+    Displays a single course overview.
+
+    Args:
+        DetailView (generic): Render a "detail" view of an object.
+    """
+    model = Course
+    template_name = 'courses/course/detail.html'
     
     
     
