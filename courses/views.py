@@ -16,12 +16,21 @@ from .forms import ModuleFormset
 
 class OwnerMixin:
     def get_queryset(self):
+        """
+        Override get_queryset() method to retrieve objects
+        that belong to the current.
+        """
         qs = super().get_queryset()
         return qs.filter(owner=self.request.user)
     
     
 class OwnerEditMixin:
     def form_valid(self, form):
+        """ 
+        Override the form_valid() method to automatically
+        set the current user in thw owner attribute of
+        the object being saved.
+        """
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
@@ -86,12 +95,28 @@ class CourseModuleUpdateView(TemplateResponseMixin, View):
         
         
 class ContentCreateUpdateView(TemplateResponseMixin, View):
+    """
+    Create or update different models' form suck as text, video,
+    image, or file.
+
+    Args:
+        TemplateResponseMixin (_type_): _description_
+        View (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     module = None
     model = None
     obj = None
     template_name = 'courses/manage/content/form.html'
     
     def get_model(self, model_name):
+        """
+        Check that the given model name is one of the four
+        models. Then use the get_model method from Django's
+        apps to get the given model.
+        """
         if model_name in ['text', 'video', 'image', 'file']:
             return apps.get_model(app_label='courses',
                                   model_name=model_name)
@@ -99,6 +124,10 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
         return None
 
     def get_form(self, model, *args, **kwargs):
+        """
+        Use modelform_factory to build a dynamic form
+        based on the given model.
+        """
         Form = modelform_factory(model, exclude=['owner',
                                                  'order',
                                                  'created',
@@ -106,10 +135,20 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
         return Form(*args, **kwargs)
     
     def dispatch(self, request, module_id, model_name, id=None):
+        """
+        Args:
+            request (_type_): _description_
+            module_id: The ID for the module that the Content
+                                is/will be associated with.
+            model_name: The name of the content to create/update.
+            id: The ID of the object that is being updated. If it's
+                None, create a new ibjects. 
+
+        """
         self.module = get_object_or_404(Module,
                                         id=module_id,
                                         course__owner=request.user)
-        self.model =self.get_model(model_name)
+        self.model = self.get_model(model_name)
         if id:
             self.obj = get_object_or_404(self.model,
                                          id=id,
@@ -117,11 +156,18 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
         return super().dispatch(request, module_id, model_name, id)
         
     def get(self, request, module_id, model_name, id=None):
+        """
+        Executed when a GET request is received. 
+        """
+
         form = self.get_form(self.model, instance=self.obj)
         return self.render_to_response({'form': form,
                                         'object': self.obj})
         
     def post(self, request, module_id, model_name, id=None):
+        """
+        Executed when a POST request is received.
+        """
         form = self.get_form(self.model,
                              instance=self.obj,
                              data=request.POST,
@@ -139,6 +185,16 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
             
 
 class ContentDeleteView(View):
+    """
+    Retrives a content object with the given id, and deletes
+    the related objects like Text, Image, Video, and File. 
+    After deleting all the related objects, it will delete
+    the content object and redirects the user to the 
+    module_content_list URL.
+
+    Args:
+        View (class): The parent of all views
+    """
     def post(self, request, id):
         content = get_object_or_404(Content,
                                     id=id,
@@ -150,6 +206,17 @@ class ContentDeleteView(View):
     
     
 class ModuleContentListView(TemplateResponseMixin, View):
+    """
+    Get a module object with the given id that belings
+    to the current user.
+
+    Args:
+        TemplateResponseMixin (Mixin): Used to render a template
+        View (Class): The parent class of all views
+
+    Returns:
+        Render a object to a template and return an HTTP response.
+    """
     template_name = 'courses/manage/module/content_list.html'
     
     def get(self, request, module_id):
@@ -185,6 +252,7 @@ class ModuleOrderView(CsrfExemptMixin,
 class ContentOrderView(CsrfExemptMixin,
                        JsonRequestResponseMixin,
                        View):
+    """ Allows to update the order of the content. """
     def post(self, request):
         for id, order in self.request_json.items():
             Content.objects.filter(id=id,
