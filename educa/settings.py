@@ -1,3 +1,6 @@
+from django.urls import reverse_lazy
+
+
 """
 Django settings for educa project.
 
@@ -128,5 +131,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-LOGIN_REDIRECT_URL = 'course_list'
+LOGIN_REDIRECT_URL = reverse_lazy('student_course_list')
 LOGOUT_REDIRECT_URL = 'login'
