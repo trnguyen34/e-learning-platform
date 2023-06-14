@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from braces.views import CsrfExemptMixin, JsonRequestResponseMixin
 from django.apps import apps
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -10,6 +11,8 @@ from django.views.generic.base import TemplateResponseMixin, View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+
+from students.forms import CourseEnrollForm
 from .models import Content, Course, Module, Subject
 from .forms import ModuleFormset
 
@@ -304,6 +307,18 @@ class CourseDetailView(DetailView):
     model = Course
     template_name = 'courses/course/detail.html'
     
+    def get_context_data(self, **kwargs):
+        """
+        The get_context_data method will include the
+        the enrollment form in the context for rendering
+        the templates. The currrent Course object is 
+        initalize with the hidden course field of the
+        form.
+        """
+        context = super().get_context_data(**kwargs)
+        context['enroll_form'] = CourseEnrollForm(
+                                    initial={'course':self.object})
+        return context
     
     
     
