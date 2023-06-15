@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     # local apps
     "courses.apps.CoursesConfig",
     "students.apps.StudentsConfig",
+    # 3rd party apps
+    "embed_video",
 ]
 
 MIDDLEWARE = [

@@ -78,6 +78,10 @@ class ItemBase(models.Model):
     updated = models.DateTimeField(auto_now=True)
     
     def render(self):
+        # The render_to_string() method renders a template
+        # and return the rendered content as a string.
+        # self._meta.model_name is use to generate a template
+        # for each content type model dynamically.
         return render_to_string(
             f'courses/content/{self._meta.model_name}.html',
             {'item':self})
