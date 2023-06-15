@@ -2,6 +2,7 @@ from typing import Any, Dict
 from braces.views import CsrfExemptMixin, JsonRequestResponseMixin
 from django.apps import apps
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.core.cache import cache
 from django.db.models import Count
 from django.db.models.query import QuerySet
 from django.forms.models import modelform_factory
@@ -52,6 +53,7 @@ class OwnerCourseEditMixin(OwnerCourseMixin, OwnerEditMixin):
 class ManageCourseListView(OwnerCourseMixin, ListView):
     template_name = 'courses/manage/course/list.html'
     permission_required = 'courses.view_course'
+    
     
     
 class CourseCreateView(OwnerCourseEditMixin, CreateView):
@@ -280,17 +282,33 @@ class CourseListView(TemplateResponseMixin, View):
             Render the objects to a template and return an HTTP response.
         """
         
-        # Retrieve all the subjects and courses by using the ORM's annotat()
-        # method, then use the Count() aggregation function to get the toal
-        # number of courses in each subject and the number of modules in each
-        # course.
-        subjects = Subject.objects.annotate(total_courses=Count('courses'))
-        courses = Course.objects.annotate(total_modules=Count('modules'))
+        # If the cache.get('all_subjects') returns None, this means the key is 
+        # not found. In other words, it has not been cacahed or cached but timed 
+        # expired. Therefore, it will perform the query to retrieve all the 
+        # Subject objects and the number of courses, and use cache.set() to cache 
+        # the results.
+        subjects = cache.get('all_subjects')
+        if not subjects:
+            subjects = Subject.objects.annotate(
+                            total_courses=Count('courses'))
+            cache.set('all_subjects', subjects)
+            
+        all_courses = Course.objects.annotate(
+                            total_modules=Count('modules'))
         
         # if the subject is given, filter the courses by the subject
         if subject:
             subject = get_object_or_404(Subject, slug=subject)
-            courses = courses.filter(subject=subject)
+            key = f'subject_{subject.id}_courses'
+            courses = cache.get(key)
+            if not courses:
+                courses = all_courses.filter(subject=subject)
+                cache.set(key, courses)
+        else:
+            courses = cache.get('all_courses')
+            if not courses:
+                courses = all_courses
+                cache.get('all_courses', courses)
         
         return self.render_to_response ({'subjects': subjects,
                                           'subject': subject,
