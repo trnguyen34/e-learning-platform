@@ -1,5 +1,6 @@
 from django.urls import reverse_lazy
 
+# docker run -d -it --rm --name redis -p 6379:6379 redis
 
 """
 Django settings for educa project.
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     # local apps
     "courses.apps.CoursesConfig",
     "students.apps.StudentsConfig",
+    "chat.apps.ChatConfig",
     # 3rd party apps
     "embed_video",
     "debug_toolbar",

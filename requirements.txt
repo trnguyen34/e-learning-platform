@@ -2,7 +2,7 @@ asgiref==3.7.2
 async-timeout==4.0.2
 attrs==23.1.0
 certifi==2023.5.7
-charset-normalizer==3.1.0
+charset-normalizer==2.1.1
 Deprecated==1.2.14
 Django==4.1.9
 django-braces==1.15.0
@@ -16,9 +16,9 @@ Pillow==9.2.0
 pymemcache==3.5.2
 pytz==2023.3
 redis==4.3.4
-requests==2.31.0
+requests==2.28.1
 six==1.16.0
 sqlparse==0.4.4
 typing_extensions==4.6.3
-urllib3==2.0.3
+urllib3==1.26.16
 wrapt==1.15.0
