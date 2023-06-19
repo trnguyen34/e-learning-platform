@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8" />
         <title>{% block title %}Educa{% endblock %}</title>
-        <link href="{% static "css/base.css" %}" rel="stylesheet">
+        <link href="{% static 'css/base.css' %}" rel="stylesheet">
     </head>
     <body>
         <div id="header">
@@ -27,7 +27,7 @@
             document.addEventListener('DOMContentLoaded', (event) => {
                 // DOM loaded
                 {% block domready %}
-                {% endblock %}
+                {% endblock domready %}
             })
         </script>  
     </body>
